@@ -1,5 +1,5 @@
 import hashlib
-
+import math
 class BloomFilter:
     def __init__(self, size : int, num_hash : int):
         self.size = size
@@ -26,13 +26,31 @@ class BloomFilter:
             if not self.bit_array[byte_i] & mask:
                 return False
         return True
-        
+
+    
+    # 
+    @staticmethod    
+    def optimal_params(n, p): # n - amount of elements,  p - desired error
+        if not (0 < p < 1 ):
+            raise ValueError(f"p must be in (0,1), got {p}")
+        if n < 1:
+            raise ValueError(f"n must >= 1 got {n}")
+        ln2 = math.log(2)
+        m = -n * math.log(p) / ln2 **2
+        k = (m / n) * ln2
+        return math.ceil(m), max(1, round(k))
+    
 
 
-bf = BloomFilter(10007, 7)
-for i in range(1000):
-    bf.add(f"item-{i}")
 
-fn = sum(1 for i in range(1000) if not bf.might_contain(f"item-{i}"))
-fp = sum(1 for i in range(20000) if bf.might_contain(f"nope-{i}"))
-print(fn, fp / 200)  # must be 0 and ~0.8
+if __name__ == "__main__":
+    bf = BloomFilter(10007, 7)
+    for i in range(1000):
+        bf.add(f"item-{i}")
+
+    fn = sum(1 for i in range(1000) if not bf.might_contain(f"item-{i}"))
+    fp = sum(1 for i in range(20000) if bf.might_contain(f"nope-{i}"))
+    print(fn, fp / 200)  # must be 0 and ~0.8
+
+    print(BloomFilter.optimal_params(1000, 0.01)) # (9586, 7)
+    print(BloomFilter.optimal_params(1000, 0.001)) # (14378, 10)
