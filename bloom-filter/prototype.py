@@ -5,6 +5,7 @@ class BloomFilter:
         self.size = size
         self.num_hash = num_hash
         self.bit_array = bytearray((size + 7 ) // 8)
+        self.count = 0  
 
 
     def _get_indexes(self, item):
@@ -17,7 +18,8 @@ class BloomFilter:
         for i in self._get_indexes(item):
             byte_i = i // 8
             mask = 1 <<(i % 8)
-            self.bit_array[byte_i] |= mask 
+            self.bit_array[byte_i] |= mask
+        self.count += 1
 
     def might_contain(self, item):
         for i in self._get_indexes(item):
@@ -26,6 +28,14 @@ class BloomFilter:
             if not self.bit_array[byte_i] & mask:
                 return False
         return True
+
+    def fill_ratio(self):
+        ones = sum(b.bit_count() for b in self.bit_array)
+        return ones / self.size          # знаменник логічний, не len(bit_array)*8
+
+    def current_fp_rate(self):
+        return self.fill_ratio() ** self.num_hash
+
     @staticmethod
     def _is_prime(x):
         if x < 2:
@@ -38,7 +48,7 @@ class BloomFilter:
     @staticmethod
     def _next_prime(x):
         while not BloomFilter._is_prime(x):
-            x+=1
+            x+= 1 
         return x
     
     @staticmethod    
