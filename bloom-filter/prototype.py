@@ -30,7 +30,7 @@ class BloomFilter:
     def _is_prime(x):
         if x < 2:
             return False
-        for d in range(2, x):
+        for d in range(2, math.isqrt(x) + 1):
             if x % d == 0:
                 return False
         return True
@@ -61,9 +61,9 @@ if __name__ == "__main__":
 
     print(BloomFilter.optimal_params(1000, 0.01)) # (9586, 7)
     print(BloomFilter.optimal_params(1000, 0.001)) # (14378, 10)
-    print(BloomFilter._is_prime(2))        # True
-    print(BloomFilter._is_prime(3))        # True
-    print(BloomFilter._is_prime(10007))    # True
-    print(BloomFilter._is_prime(1))        # False
-    print(BloomFilter._is_prime(4))        # False
-    print(BloomFilter._is_prime(9))        # False
+    print(BloomFilter._is_prime(9))     
+    print(BloomFilter._is_prime(25))       
+    print(BloomFilter._is_prime(10007))   
+    print(BloomFilter._is_prime(49))        
+    print(BloomFilter._is_prime(1000003))        
+    print(BloomFilter._is_prime(9))       
