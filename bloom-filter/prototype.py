@@ -34,8 +34,13 @@ class BloomFilter:
             if x % d == 0:
                 return False
         return True
+
+    @staticmethod
+    def _next_prime(x):
+        while not BloomFilter._is_prime(x):
+            x+=1
+        return x
     
-    # 
     @staticmethod    
     def optimal_params(n, p): # n - amount of elements,  p - desired error
         if not (0 < p < 1 ):
@@ -47,23 +52,18 @@ class BloomFilter:
         k = (m / n) * ln2
         return math.ceil(m), max(1, round(k))
     
-
+    @classmethod
+    def from_capacity(cls, expected_items, false_positive_rate):
+        size, num_hash = cls.optimal_params(expected_items, false_positive_rate)
+        size = cls._next_prime(size)
+        return cls(size, num_hash)
 
 
 if __name__ == "__main__":
-    bf = BloomFilter(10007, 7)
+    bf = BloomFilter.from_capacity(1000, 0.01)
     for i in range(1000):
         bf.add(f"item-{i}")
 
     fn = sum(1 for i in range(1000) if not bf.might_contain(f"item-{i}"))
     fp = sum(1 for i in range(20000) if bf.might_contain(f"nope-{i}"))
-    print(fn, fp / 200)  # must be 0 and ~0.8
-
-    print(BloomFilter.optimal_params(1000, 0.01)) # (9586, 7)
-    print(BloomFilter.optimal_params(1000, 0.001)) # (14378, 10)
-    print(BloomFilter._is_prime(9))     
-    print(BloomFilter._is_prime(25))       
-    print(BloomFilter._is_prime(10007))   
-    print(BloomFilter._is_prime(49))        
-    print(BloomFilter._is_prime(1000003))        
-    print(BloomFilter._is_prime(9))       
+    print(bf.size, bf.num_hash, fn, fp / 200)   # ~9587 7 0 ~0.9
