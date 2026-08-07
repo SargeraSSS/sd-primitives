@@ -31,7 +31,7 @@ class BloomFilter:
 
     def fill_ratio(self):
         ones = sum(b.bit_count() for b in self.bit_array)
-        return ones / self.size          # знаменник логічний, не len(bit_array)*8
+        return ones / self.size 
 
     def current_fp_rate(self):
         return self.fill_ratio() ** self.num_hash
