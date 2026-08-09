@@ -56,4 +56,6 @@ counts = {}
 for k in keys:
     n = ch.get_node(k)
     counts[n] = counts.get(n, 0) + 1
-print(counts)  # {'a': 72723, 'c': 17156, 'b': 6379, 'd': 3742}
+print(counts)  
+#ConsistentHash(vnodes=1) -> {'a': 72723, 'c': 17156, 'b': 6379, 'd': 3742}
+#ConsistentHash(vnodes=200) -> {'c': 27448, 'b': 27612, 'd': 21769, 'a': 23171}
