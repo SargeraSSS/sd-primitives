@@ -26,7 +26,14 @@ class ConsistentHash:
             i = 0
         return self._ring[self._sorted[i]]
 
+    def remove_node(self, name):
+        for i in range(self.vnodes):
+            pos = self._hash(f"{name}#{i}")
+            del self._ring[pos]
+            self._sorted.pop(bisect.bisect_left(self._sorted, pos))
 
+
+            
 # buckets = [0] * 100
 # step = 2 ** 64 // 100
 # for i in range(100000):
@@ -36,11 +43,17 @@ class ConsistentHash:
 
 keys = [f"key-{i}" for i in range(100000)]
 
-ch = ConsistentHash(vnodes=1)
+ch = ConsistentHash(vnodes=200)
 for n in ["a", "b", "c"]:
     ch.add_node(n)
 
 before = {k: ch.get_node(k) for k in keys}
 ch.add_node("d")
 moved = sum(1 for k in keys if ch.get_node(k) != before[k])
-print(moved / len(keys))
+print(moved / len(keys))    #0.03742
+
+counts = {}
+for k in keys:
+    n = ch.get_node(k)
+    counts[n] = counts.get(n, 0) + 1
+print(counts)  # {'a': 72723, 'c': 17156, 'b': 6379, 'd': 3742}
