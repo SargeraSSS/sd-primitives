@@ -26,6 +26,15 @@ class Store:
             self._data[key] = (value, expires_at)
             return True
 
+    def delete_if(self, key, value):
+        with self._mu:
+            current = self._live(key)
+            if current == value:
+                del self._data[key]
+                return True
+            else:
+                return False
+
 
 if __name__ == "__main__":
     s = Store()
@@ -33,3 +42,9 @@ if __name__ == "__main__":
     print(s.set_nx_px("k", "b", 0.1))  # False - occupied
     time.sleep(0.15)
     print(s.set_nx_px("k", "b", 0.1))  # first call is dead - True then
+
+    s = Store()
+    s.set_nx_px("job", "a", 1.0)
+    print(s.delete_if("job", "b"))  # False
+    print(s.delete_if("job", "a"))  # True
+    print(s.delete_if("job", "a"))  # False
