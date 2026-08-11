@@ -7,12 +7,10 @@ This repository exists to showcase system design primitives — the basic buildi
 ### [bloom-filter](./bloom-filter)
 A probabilistic set-membership structure. It can return false positives but never false negatives, saving memory and unnecessary trips to storage.
 
-
-## TODO
-
-
 ### [consistent-hashing](./consistent-hashing)
 Key distribution across nodes using a hash ring with virtual nodes. Adding or removing a node remaps only a small fraction of the keys.
+
+## TODO
 
 ### [distributed-lock](./distributed-lock)
 Mutual exclusion across processes on different machines: lock acquisition with a TTL, lease renewal, and safe owner-only release.
