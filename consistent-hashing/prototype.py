@@ -1,5 +1,5 @@
-import hashlib
 import bisect
+import hashlib
 
 
 class ConsistentHash:
@@ -33,29 +33,37 @@ class ConsistentHash:
             self._sorted.pop(bisect.bisect_left(self._sorted, pos))
 
 
-            
 # buckets = [0] * 100
 # step = 2 ** 64 // 100
 # for i in range(100000):
 #     buckets[min(ConsistentHash._hash(f"x-{i}") // step, 99)] += 1
 # print(min(buckets), max(buckets)) # 934 1066
 
+if __name__ == "__main__":
+    keys = [f"key-{i}" for i in range(100000)]
 
-keys = [f"key-{i}" for i in range(100000)]
+    ch = ConsistentHash(vnodes=200)
+    for n in ["a", "b", "c"]:
+        ch.add_node(n)
 
-ch = ConsistentHash(vnodes=200)
-for n in ["a", "b", "c"]:
-    ch.add_node(n)
+    before = {k: ch.get_node(k) for k in keys}
+    ch.add_node("d")
+    moved = sum(1 for k in keys if ch.get_node(k) != before[k])
+    print(moved / len(keys))
 
-before = {k: ch.get_node(k) for k in keys}
-ch.add_node("d")
-moved = sum(1 for k in keys if ch.get_node(k) != before[k])
-print(moved / len(keys))    #0.03742
+    before = {k: ch.get_node(k) for k in keys}
+    ch.remove_node("c")
+    moved = [k for k in keys if ch.get_node(k) != before[k]]
+    orphans = [k for k in keys if before[k] == "c"]
+    print(len(orphans), len(moved), set(moved) == set(orphans))
+    # 0.21769
+    # 27448 27448 True
+    # {'d': 31770, 'b': 36751, 'a': 31479}
 
-counts = {}
-for k in keys:
-    n = ch.get_node(k)
-    counts[n] = counts.get(n, 0) + 1
-print(counts)  
-#ConsistentHash(vnodes=1) -> {'a': 72723, 'c': 17156, 'b': 6379, 'd': 3742}
-#ConsistentHash(vnodes=200) -> {'c': 27448, 'b': 27612, 'd': 21769, 'a': 23171}
+    counts = {}
+    for k in keys:
+        n = ch.get_node(k)
+        counts[n] = counts.get(n, 0) + 1
+    print(counts)
+# ConsistentHash(vnodes=1) -> {'a': 72723, 'c': 17156, 'b': 6379, 'd': 3742}
+# ConsistentHash(vnodes=200) -> {'c': 27448, 'b': 27612, 'd': 21769, 'a': 23171}
