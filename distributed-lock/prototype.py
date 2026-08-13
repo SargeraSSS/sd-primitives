@@ -35,6 +35,15 @@ class Store:
             else:
                 return False
 
+    def expire_if(self, key, value, ttl):
+        with self._mu:
+            current = self._live(key)
+            if current == value:
+                self._data[key] = (value, time.monotonic() + ttl)
+
+                return True
+            return False
+
 
 if __name__ == "__main__":
     s = Store()
@@ -48,3 +57,21 @@ if __name__ == "__main__":
     print(s.delete_if("job", "b"))  # False
     print(s.delete_if("job", "a"))  # True
     print(s.delete_if("job", "a"))  # False
+
+    s = Store()
+    s.set_nx_px("j", "a", 0.2)
+    time.sleep(0.15)
+    print(s.expire_if("j", "a", 5.0))  # true
+    time.sleep(0.15)
+    print(s.set_nx_px("j", "b", 1.0))  # false
+
+    s = Store()
+    s.set_nx_px("j", "a", 0.1)
+    print(s.expire_if("j", "a", 0.1))  # True
+    print(s.expire_if("j", "b", 0.1))  # False
+
+    s = Store()
+    s.set_nx_px("j", "a", 0.1)
+    time.sleep(0.15)
+    print(s.expire_if("j", "a", 5.0))  # False
+    print(s.set_nx_px("j", "b", 1.0))  # True
