@@ -1,5 +1,6 @@
 import threading
 import time
+import uuid
 
 
 class Store:
@@ -43,6 +44,17 @@ class Store:
 
                 return True
             return False
+
+
+class Lock:
+    def __init__(self, store, key, ttl=10.0):
+        self._store = store
+        self.key = key
+        self._ttl = ttl
+        self._token = uuid.uuid4().hex
+
+    def release(self):
+        return self._store.delete_if(self._key, self._token)
 
 
 if __name__ == "__main__":
