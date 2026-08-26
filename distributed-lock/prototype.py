@@ -60,11 +60,15 @@ class Lock:
         return self._store.expire_if(self._key, self._token, self._ttl)
 
     def acquire(self, blocking=True, timeout=None):
-        if self._store.set_nx_px(self._key, self._token, self._ttl):
-            return True
-        if not blocking:
-            return False
-        time.sleep(0.05)
+        deadline = None if timeout is None else time.monotonic() + timeout
+        while True:
+            if self._store.set_nx_px(self._key, self._token, self._ttl):
+                return True
+            if not blocking:
+                return False
+            if deadline is not None and time.monotonic() >= deadline:
+                return False
+            time.sleep(0.05)
 
 
 if __name__ == "__main__":
@@ -99,9 +103,28 @@ if __name__ == "__main__":
     print(s.set_nx_px("j", "b", 1.0))  # True
 
     s = Store()
-a = Lock(s, "job", ttl=1.0)
-b = Lock(s, "job", ttl=1.0)
-print(a.acquire())  # True
-print(b.acquire())  # False a is holding lock
-print(a.release())  # True
-print(b.acquire())  # True lock can be takken now
+    a = Lock(s, "job", ttl=1.0)
+    b = Lock(s, "job", ttl=1.0)
+    print(a.acquire())  # True
+    print(b.acquire())  # False a is holding lock
+    print(a.release())  # True
+    print(b.acquire())  # True lock can be takken now
+
+    s = Store()
+    a = Lock(s, "job", ttl=0.3)
+    b = Lock(s, "job", ttl=0.3)
+
+    print(a.acquire())  # True
+    print(b.acquire(blocking=False))  # False
+
+    t = time.monotonic()
+    print(b.acquire())  # True, but not
+    print(round(time.monotonic() - t, 2))  # ~0.3s
+    s = Store()
+    a = Lock(s, "job", ttl=5.0)
+    b = Lock(s, "job", ttl=5.0)
+
+    print(a.acquire())  # True
+    t = time.monotonic()
+    print(b.acquire(timeout=0.2))  # False
+    print(round(time.monotonic() - t, 2))  # ~0.2s
