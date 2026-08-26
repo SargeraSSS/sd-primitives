@@ -60,7 +60,11 @@ class Lock:
         return self._store.expire_if(self._key, self._token, self._ttl)
 
     def acquire(self, blocking=True, timeout=None):
-        return self._store.set_nx_px(self._key, self._token, self._ttl)
+        if self._store.set_nx_px(self._key, self._token, self._ttl):
+            return True
+        if not blocking:
+            return False
+        time.sleep(0.05)
 
 
 if __name__ == "__main__":
