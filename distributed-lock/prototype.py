@@ -13,8 +13,6 @@ class Store:
             value, expires_at = self._data[key]
             if expires_at > time.monotonic():
                 return value
-            else:
-                del self._data[key]
         return None
 
     def set_nx_px(self, key, value, ttl):
@@ -51,18 +49,24 @@ class Lock:
         self._store = store
         self._key = key
         self._ttl = ttl
-        self._token = uuid.uuid4().hex
+        self._token = None
 
     def release(self):
-        return self._store.delete_if(self._key, self._token)
+        if self._token is None:
+            return False
+        ok = self._store.delete_if(self._key, self._token)
+        self._token = None
+        return ok
 
     def renew(self):
         return self._store.expire_if(self._key, self._token, self._ttl)
 
     def acquire(self, blocking=True, timeout=None):
+        token = uuid.uuid4().hex
         deadline = None if timeout is None else time.monotonic() + timeout
         while True:
-            if self._store.set_nx_px(self._key, self._token, self._ttl):
+            if self._store.set_nx_px(self._key, token, self._ttl):
+                self._token = token
                 return True
             if not blocking:
                 return False
@@ -118,7 +122,7 @@ if __name__ == "__main__":
     print(b.acquire(blocking=False))  # False
 
     t = time.monotonic()
-    print(b.acquire())  # True, but not
+    print(b.acquire())  # True
     print(round(time.monotonic() - t, 2))  # ~0.3s
     s = Store()
     a = Lock(s, "job", ttl=5.0)
@@ -128,3 +132,11 @@ if __name__ == "__main__":
     t = time.monotonic()
     print(b.acquire(timeout=0.2))  # False
     print(round(time.monotonic() - t, 2))  # ~0.2s
+
+    s = Store()
+    lock = Lock(s, "job", ttl=5.0)
+
+    print(lock.acquire())  # True
+    print(lock.release())  # True
+    print(lock.release())  # False
+    print(lock.acquire())  # True
