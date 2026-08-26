@@ -59,6 +59,9 @@ class Lock:
     def renew(self):
         return self._store.expire_if(self._key, self._token, self._ttl)
 
+    def acquire(self, blocking=True, timeout=None):
+        return self._store.set_nx_px(self._key, self._token, self._ttl)
+
 
 if __name__ == "__main__":
     s = Store()
@@ -90,3 +93,11 @@ if __name__ == "__main__":
     time.sleep(0.15)
     print(s.expire_if("j", "a", 5.0))  # False
     print(s.set_nx_px("j", "b", 1.0))  # True
+
+    s = Store()
+a = Lock(s, "job", ttl=1.0)
+b = Lock(s, "job", ttl=1.0)
+print(a.acquire())  # True
+print(b.acquire())  # False a is holding lock
+print(a.release())  # True
+print(b.acquire())  # True lock can be takken now
