@@ -59,6 +59,8 @@ class Lock:
         return ok
 
     def renew(self):
+        if self._token is None:
+            return False
         return self._store.expire_if(self._key, self._token, self._ttl)
 
     def acquire(self, blocking=True, timeout=None):
@@ -140,3 +142,18 @@ if __name__ == "__main__":
     print(lock.release())  # True
     print(lock.release())  # False
     print(lock.acquire())  # True
+
+    s = Store()
+    lock = Lock(s, "job", ttl=0.3)
+
+    print(lock.renew())  # False — we hold nothing yet
+    print(lock.acquire())  # True
+    time.sleep(0.2)
+    print(
+        lock.renew()
+    )  # True — made it before the TTL expired, the lease has been extended
+    time.sleep(0.2)
+    print(lock.renew())  # True
+    time.sleep(0.4)
+    print(lock.renew())  # False — missed the deadline, the lease has expired
+    print(lock.release())  # False - nothing left to give
