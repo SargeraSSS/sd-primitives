@@ -41,3 +41,11 @@ class WAL:
         self._f.flush()
         os.fsync(self._f.fileno())
         return lsn
+
+    def replay(self):
+        self._f.seek(0)
+        while True:
+            rec = decode_from(self._f)
+            if rec is None:
+                break
+            yield rec
