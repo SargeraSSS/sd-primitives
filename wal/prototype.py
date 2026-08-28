@@ -23,3 +23,21 @@ def decode_from(f) -> tuple[int, int, bytes] | None:
     if zlib.crc32(payload) != crc:
         return None
     return lsn, rtype, payload
+
+
+class WAL:
+    def __init__(self, path):
+        self._path = path
+        self._f = open(path, "a+b")
+        self._next_lsn = 1
+        self._recover()
+
+    def append(self, rtype: bytes, payload: bytes) -> int:
+        lsn = self._next_lsn
+        self._next_lsn += 1
+
+        frame = encode(lsn, rtype, payload)
+        self._f.write(frame)
+        self._f.flush()
+        os.fsync(self._f.fileno())
+        return lsn
