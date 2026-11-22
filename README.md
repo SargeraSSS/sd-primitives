@@ -15,7 +15,6 @@ Key distribution across nodes using a hash ring with virtual nodes. Adding or re
 Mutual exclusion across processes on different machines: lock acquisition with a TTL, lease renewal, and safe owner-only release.
 
 
-## TODO
 ### [wal](./wal)
 Write-Ahead Log — an append-only journal written to disk before changes are applied. The foundation of durability and crash recovery.
 
